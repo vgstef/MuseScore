@@ -273,7 +273,7 @@ add_executable ( ${ExecutableName}
       importmidi_clef.cpp importmidi_lrhand.cpp importmidi_lyrics.cpp importmidi_trview.cpp
       importmidi_inner.cpp importmidi_tie.cpp
       resourceManager.cpp downloadUtils.cpp
-      textcursor.cpp
+      textcursor.cpp continuouspanel.cpp
 
       ${OMR_FILES}
       ${AUDIO}

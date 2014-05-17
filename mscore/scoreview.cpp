@@ -67,6 +67,7 @@
 #include "measureproperties.h"
 #include "textcursor.h"
 #include "navigator.h"
+#include "continuouspanel.h"
 
 #include "libmscore/pitchspelling.h"
 #include "libmscore/notedot.h"
@@ -658,6 +659,8 @@ ScoreView::ScoreView(QWidget* parent)
 
       _cursor     = new PositionCursor(this);
       _cursor->setType(CursorType::POS);
+      _continuousPanel = new ContinuousPanel(this);
+      _continuousPanel->setVisible(true);
 
       shadowNote  = 0;
       grips       = 0;
@@ -933,12 +936,16 @@ void ScoreView::setScore(Score* s)
             shadowNote->setScore(_score);
       lasso->setScore(s);
       _foto->setScore(s);
+      _continuousPanel->setScore(s);
+
       if (s) {
             _curLoopIn->move(s->pos(POS::LEFT));
             _curLoopOut->move(s->pos(POS::RIGHT));
             loopToggled(getAction("loop")->isChecked());
 
             connect(s, SIGNAL(posChanged(POS,unsigned)), SLOT(posChanged(POS,unsigned)));
+            connect(this, SIGNAL(viewRectChanged()), this, SLOT(updateContinuousPanel()));
+
             s->setLayoutMode(LayoutPage);
             s->setLayoutAll(true);
             s->update();
@@ -956,6 +963,7 @@ ScoreView::~ScoreView()
       delete lasso;
       delete _foto;
       delete _cursor;
+      delete _continuousPanel;
       delete _curLoopIn;
       delete _curLoopOut;
       delete bgPixmap;
@@ -1601,6 +1609,10 @@ void ScoreView::paintEvent(QPaintEvent* ev)
       _curLoopOut->paint(&vp);
       _cursor->paint(&vp);
 
+      if (_score->layoutMode() == LayoutLine)
+            _continuousPanel->paint(ev->rect(), vp);
+//            paintContinuousPanel(ev->rect(), vp);
+
       lasso->draw(&vp);
       if (fotoMode())
             _foto->draw(&vp);
@@ -1913,7 +1925,7 @@ void ScoreView::paint(const QRect& r, QPainter& p)
                   p.fillRect(r, _bgColor);
             else
                   p.drawTiledPixmap(r, *bgPixmap, r.topLeft() - QPoint(_matrix.m31(), _matrix.m32()));
-            }
+            } 
       p.restore();
       }
 
@@ -3665,24 +3677,21 @@ void ScoreView::pageEnd()
 void ScoreView::adjustCanvasPosition(const Element* el, bool playBack)
       {
       if (score()->layoutMode() == LayoutLine) {
-            qreal x1 = el->canvasPos().x();
-            qreal x2 = x1 + el->width();
+            qreal xo; // new x offset
+            qreal curPosR = _cursor->rect().right();
+            qreal curPosL = _cursor->rect().left();
+            qreal curPosMagR = curPosR * mag() + xoffset();
+            qreal curPosMagL = curPosL * mag() + xoffset();
 
-            int ix1 = (x1 + xoffset()) * mag();
-            int ix2 = (x2 + xoffset()) * mag();
-            qreal xo;
-            int dx = ix2 - ix1;
-            if (dx < width()) {
-                  if (ix2 >= width()) {
-                        xo = dx / mag() - x2;
-                        setOffset(xo, yoffset());
-                        update();
-                        }
-                  else if (ix1 < 0) {
-                        xo = (width() - dx) / mag() - x1;
-                        setOffset(xo, yoffset());
-                        update();
-                        }
+            if (curPosMagR >= width() * 0.90) { // leaves 10% margin to the right
+                  xo = xoffset() - curPosMagL + width() * 0.05;
+                  setOffset(xo, yoffset());
+                  update();
+                  }
+            else if (curPosMagL < width() * 0.05) { // leaves 5% margin to the left
+                  xo = -curPosL*mag() + width() * 0.05;
+                  setOffset(xo, yoffset());
+                  update();
                   }
             return;
             }
@@ -5583,6 +5592,17 @@ void ScoreView::loopToggled(bool val)
       _curLoopIn->setVisible(val);
       _curLoopOut->setVisible(val);
       update();
+      }
+
+//---------------------------------------------------------
+//   updateContinuousPanel
+//   slot triggered when moving around the score to keep the panel visible
+//---------------------------------------------------------
+
+void ScoreView::updateContinuousPanel()
+      {
+      if (_score->layoutMode() == LayoutLine)
+            update();
       }
 }
 

@@ -236,6 +236,7 @@ class Text : public Element {
       void insertText(const QString&);
 
       virtual void layout() override;
+      void sameLayout();
       virtual void layout1();
       qreal lineSpacing() const;
       qreal lineHeight() const;

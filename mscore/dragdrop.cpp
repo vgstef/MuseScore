@@ -58,6 +58,7 @@ void ScoreView::setViewRect(const QRectF& r)
       imatrix = _matrix.inverted();
       scroll(dx, dy, QRect(0, 0, width(), height()));
       emit offsetChanged(_matrix.dx(), _matrix.dy());
+      update();
       }
 
 //---------------------------------------------------------

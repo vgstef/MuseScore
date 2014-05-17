@@ -48,6 +48,7 @@ class MeasureBase;
 class Staff;
 class OmrView;
 class PositionCursor;
+class ContinuousPanel;
 class Tuplet;
 
 enum class POS;
@@ -170,6 +171,9 @@ class ScoreView : public QWidget, public MuseScoreView {
       PositionCursor* _curLoopIn;
       PositionCursor* _curLoopOut;
 
+      // Continuous panel
+      ContinuousPanel* _continuousPanel;
+
       Lasso* lasso;           ///< temporarily drawn lasso selection
       Lasso* _foto;
 
@@ -180,6 +184,7 @@ class ScoreView : public QWidget, public MuseScoreView {
 
       virtual void paintEvent(QPaintEvent*);
       void paint(const QRect&, QPainter&);
+      //void paintContinuousPanel(const QRect&, QPainter&);
 
       void objectPopup(const QPoint&, Element*);
       void measurePopup(const QPoint&, Measure*);
@@ -205,6 +210,7 @@ class ScoreView : public QWidget, public MuseScoreView {
 
       void setShadowNote(const QPointF&);
       void drawElements(QPainter& p,const QList<Element*>& el);
+      //void drawContinuousPanel(QPainter& p,const QList<Element*>& el);
       bool dragTimeAnchorElement(const QPointF& pos);
       void dragSymbol(const QPointF& pos);
       bool dragMeasureAnchorElement(const QPointF& pos);
@@ -291,6 +297,8 @@ class ScoreView : public QWidget, public MuseScoreView {
 
       void cloneElement(Element* e);
       void doFotoDragEdit(QMouseEvent* ev);
+
+      void updateContinuousPanel();
 
    signals:
       void viewRectChanged();
